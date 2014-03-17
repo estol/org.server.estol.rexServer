@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="1">
+        <file>
+            <url>src/org/server/estol/skeleton/debug/DebugUtilities.java</url>
+            <bookmark id="1">
+                <name/>
+                <line>394</line>
+                <key/>
+            </bookmark>
+        </file>
+    </editor-bookmarks>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/Tim/Documents/NetBeansProjects/org.server.estol.rexServer/src/org/server/estol/skeleton/commons/Configuration.java</file>
+            <file>file:/C:/Users/Tim/Documents/NetBeansProjects/org.server.estol.rexServer/src/org/server/estol/skeleton/core/Core.java</file>
+            <file>file:/C:/Users/Tim/Documents/NetBeansProjects/org.server.estol.rexServer/src/org/server/estol/skeleton/applicationlogic/InputParser.java</file>
+            <file>file:/C:/Users/Tim/Documents/NetBeansProjects/org.server.estol.rexServer/src/org/server/estol/skeleton/applicationlogic/MainLogic.java</file>
+            <file>file:/C:/Users/Tim/Documents/NetBeansProjects/org.server.estol.rexServer/src/org/server/estol/skeleton/applicationlogic/Execution/DirectoryTraverse.java</file>
+        </group>
+    </open-files>
+</project-private>
