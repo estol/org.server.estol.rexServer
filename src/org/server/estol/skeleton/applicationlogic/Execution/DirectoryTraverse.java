@@ -1,7 +1,10 @@
 package org.server.estol.skeleton.applicationlogic.Execution;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -121,10 +124,6 @@ public class DirectoryTraverse
         File[] contents = directory.listFiles();
         for (File item : contents)
         {
-            System.out.printf("%s - directory? %b file? %b exists? %b %n", item.getPath(), item.isDirectory(), item.isFile(), item.exists());
-        }
-        for (File item : contents)
-        {
             item = item.getAbsoluteFile();
             if (item.isDirectory())
             {
@@ -137,6 +136,20 @@ public class DirectoryTraverse
                 nodes.add(new DefaultMutableTreeNode(item.getName()));
             }
         }
+        Collections.sort(nodes, new TreeNodeComparator());
         return nodes;
+    }
+    
+    private static class TreeNodeComparator implements Comparator<DefaultMutableTreeNode>
+    {
+        @Override
+        public int compare(DefaultMutableTreeNode o1, DefaultMutableTreeNode o2)
+        {
+            String str1 = (String)o1.getUserObject();
+            String str2 = (String)o2.getUserObject();
+            int result = String.CASE_INSENSITIVE_ORDER.compare(str1, str2);
+            return (result != 0) ? result : str1.compareTo(str2);
+        }
+        
     }
 }
