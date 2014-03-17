@@ -34,7 +34,7 @@ public enum MainLogic
      */
     private WeakReference<IniParser> parser;
     
-    public static final int SERVERPORT = 5052; // TODO read this from ini
+    //public static final int SERVERPORT = 5052; // TODO read this from ini
     
     /**
      * Starts the broadcasting of UDP datagrams, so the clients can discover

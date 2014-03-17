@@ -5,7 +5,6 @@ import org.server.estol.skeleton.applicationlogic.Execution.ExecutionEngine;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
-import javax.swing.tree.TreeModel;
 import org.clientserver.estol.commobject.CommunicationInterface;
 import org.clientserver.estol.commobject.CommunicationObject;
 import org.clientserver.estol.commobject.CommunicationObjectObjectPayload;
@@ -23,6 +22,7 @@ public enum  InputParser
     private Thread dsThread = null;
     private static int jobNumber = 0;
     private static final HashMap<Integer, ExecutionEngine> jobs = new HashMap();
+    private MainLogic ml = MainLogic.MainLogic;
     
     
     public void parseCommand(ObjectOutputStream oos, String payload) throws InterruptedException
@@ -38,7 +38,7 @@ public enum  InputParser
                 response.append(DebugServer.PORT);
                 if (dsThread == null || !dsThread.isAlive())
                 {
-                    ds.initialize(MainLogic.MainLogic.workers);
+                    ds.initialize(ml.workers);
                     dsThread = new Thread(ds);
                     dsThread.start();
                 }
@@ -58,7 +58,12 @@ public enum  InputParser
             }
             case "GetRoot":
             {
-                respond(oos, packPayload(MainLogic.MainLogic.getRoot()));
+                respond(oos, packPayload(ml.getRoot()));
+                break;
+            }
+            case "auth":
+            {
+                respond(oos, packPayload("hash"));
                 break;
             }
             default:
@@ -68,7 +73,7 @@ public enum  InputParser
                     String[] slices = payload.split(":");
                     if ("|root|".equals(slices[1]))
                     {
-                        slices[1] = MainLogic.MainLogic.getRoot();
+                        slices[1] = ml.getRoot();
                     }
                     respond(oos, packPayload(new DirectoryTraverse().getNodes(slices[1])));
                 }
@@ -80,6 +85,10 @@ public enum  InputParser
                     ee.setInput(input);
                     respond(oos, packPayload(ee.getOutput() + "\nReturn value: "));
                 }
+                else if (payload.startsWith("authAs"))
+                {
+                    System.out.printf("%s%n", payload);
+                }
                 else
                 {
                     StringBuilder sb = new StringBuilder();
@@ -87,7 +96,6 @@ public enum  InputParser
                     sb.append(payload);
                     sb.append(".");
                     respond(oos, packPayload(sb.toString()));
-                    break;   
                 }
             }
         }

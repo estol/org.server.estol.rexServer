@@ -20,12 +20,13 @@ public enum Server implements Runnable
     private ServerSocket socket;
     private boolean runFlag = true;
     private ThreadGroup workers;
+    private MainLogic ml = MainLogic.MainLogic;
     
     public void initialize(ThreadGroup workers)
     {
         try
         {
-            socket = new ServerSocket(MainLogic.SERVERPORT);
+            socket = new ServerSocket(ml.getParser().getInt("network", "communication_port", 5052)); // TODO: bind to the interface only defined in the configuration file.
             this.workers = workers;
         }
         catch (IOException ex)

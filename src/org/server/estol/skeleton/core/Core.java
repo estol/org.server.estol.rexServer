@@ -112,6 +112,11 @@ public class Core
                         }
                     }
                     
+                    case "-create_user":
+                    {
+                        
+                    }
+                    
                     case "-nostart":
                     {
                         System.exit(0);

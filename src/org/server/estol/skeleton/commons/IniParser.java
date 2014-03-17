@@ -21,7 +21,9 @@ package org.server.estol.skeleton.commons;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -148,6 +150,32 @@ public class IniParser
     }
     
     /**
+     * Returns all the sections as defined in the ini file.
+     * 
+     * @return List type, with String contents - ArrayList - with all the sections defined in the ini.
+     */
+    public List<String> getSections()
+    {
+        ArrayList<String> sections = new ArrayList<>();
+        sections.addAll(_entries.keySet());
+        return sections;
+    }
+    
+    /**
+     * Retruns all the keys of a section as defined in the ini file.
+     * 
+     * @param section a String object, that identifies the section
+     * @return List type, with String contents - ArrayList - with all the keys defined in the section.
+     */
+    public List<String> getKeys(String section)
+    {
+        Map<String, String> subSection = _entries.get(section);
+        ArrayList<String> keys = new ArrayList<>();
+        keys.addAll(subSection.keySet());
+        return keys;
+    }
+    
+    /**
      * Looks for a value of a key in a section.
      * 
      * @param section  the section where we are looking for the value
@@ -182,7 +210,6 @@ public class IniParser
         }
         return Integer.parseInt(kv.get(key));
     }
-    
     /**
      * Looks for a value of a key in a section.
      * 

@@ -20,15 +20,18 @@ public class BroadcastWorker implements Runnable, ThreadedUtility
 {
     private DatagramSocket socket = null;
     private InetAddress group;
-    private int port = 4041;
     private boolean runFlag = true;
+    private int port;
+    private MainLogic ml = MainLogic.MainLogic;
     
     private static String SERVER_ADDRESS;
 
     public BroadcastWorker() throws UnknownHostException, SocketException
     {
+        port = ml.getParser().getInt("network", "broadcast_port", 4041);
         group = InetAddress.getByName("230.0.0.1");
-        socket = new DatagramSocket(port);
+        socket = new DatagramSocket(port); // TODO: bind to the interface defined in the configuration file only.
+        //System.out.printf("%d - %d%n", socket.getPort(), ml.getParser().getInt("network", "broadcast_port", 4041));
     }
     
     
@@ -40,11 +43,11 @@ public class BroadcastWorker implements Runnable, ThreadedUtility
     @Override
     public void run()
     {
+        Thread.currentThread().setName("Broadcast Worker");
         try {
-            Thread.currentThread().setName("Broadcast Worker");
             byte[] buffer = new byte[256];
             // CHANGE THIS BACK TO INTERNAL BEFORE YOU GO APESHIT OVER THE MYSTERIOUS FAILURES!
-            NetworkInterface nif = NetworkInterface.getByName(MainLogic.MainLogic.getParser().getString("", "", "internal")); // TODO read this from ini
+            NetworkInterface nif = NetworkInterface.getByName(ml.getParser().getString("network", "interface", "internal"));
             //System.out.printf("%s\n", nif.getInetAddresses().nextElement().getHostAddress());
             StringBuilder sb = new StringBuilder();
             Enumeration<InetAddress> inetAddresses = nif.getInetAddresses();
@@ -58,7 +61,7 @@ public class BroadcastWorker implements Runnable, ThreadedUtility
             }
             
             sb.append(":");
-            sb.append(MainLogic.SERVERPORT);
+            sb.append(ml.getParser().getInt("network", "communication_port", 5052));
             
             SERVER_ADDRESS = sb.toString().split(":")[0];
             
