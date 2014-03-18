@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Tim
+ * Copyright (C) 2014 Péter Szabó
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -68,7 +68,7 @@ import java.util.regex.Pattern;
  * DISCLAIMER: if you test this class, and copy the above ini files, with the preceding
  * asterisks, I'd suggest you shouldn't proliferate.
  * 
- * @author Tim
+ * @author Péter Szabó
  */
 public class IniParser
 {

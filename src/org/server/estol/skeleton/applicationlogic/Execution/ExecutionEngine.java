@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2014 Péter Szabó
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
 package org.server.estol.skeleton.applicationlogic.Execution;
 
 import java.io.BufferedReader;
@@ -6,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 import org.server.estol.skeleton.commons.NumericUtilities;
 import org.server.estol.skeleton.debug.DebugUtilities;
@@ -13,7 +33,6 @@ import org.server.estol.skeleton.system.exceptions.ProcessDoneException;
 import org.server.estol.skeleton.system.exceptions.ProcessNotDoneException;
 
 /**
- * This is probably the most complicated, yet most ingenious class in the whole application.
  * The problem which it solves is pretty easy:
  * Run a program, and get the output of the program. If any input is required, prompt the user
  * for some input.
@@ -30,11 +49,10 @@ import org.server.estol.skeleton.system.exceptions.ProcessNotDoneException;
  * 2. Instantiating object creates an instance of the java.lang.Thread class, with the ExecutionEngine instance passed as the
  *    runnable, and start the thread.
  *    Generally considered the lazy way - therefor the best way - to ignore the new instance of the Thread class, and just spawn
- *    the new thread on the fly. For the lesser life forms: new Thread(runnableObject).start();
+ *    the new thread on the fly. e.g: new Thread(runnableObject).start();
  *    Since the payload of these threads happen to be in a heterogeneous fashion, there are virtually no resources, that could be
  *    blocked by any of the ExecutionEngine objects, therefor there should be no reason to keep a close leash on these threads.
  *    Trust me, the Runnable has been tested to the extremes to take care of any problems occurring while executing.
- *    For more information on this @see org.server.estol.skeleton.applicationlogic.Execution.ShutdownHookThread.java class.
  * 3. ??? - http://youtu.be/tO5sxLapAts
  * 4. The thread will eventually stop, and a return code of the process could be retrieved.
  * 
@@ -47,7 +65,7 @@ import org.server.estol.skeleton.system.exceptions.ProcessNotDoneException;
  * TODO:
  *   - Figure out a way to send a notification to the client if the process is waiting for an input
  * 
- * @author Tim
+ * @author Péter Szabó
  */
 public class ExecutionEngine implements Runnable
 {
@@ -72,8 +90,6 @@ public class ExecutionEngine implements Runnable
     private BufferedReader outputReader;
     private BufferedReader errorReader;
     private PrintWriter input;
-    
-    private long runtime;
     
     /**
      * This is an internal class.
@@ -270,18 +286,18 @@ public class ExecutionEngine implements Runnable
         builder.directory(new File(this.workingDir));
     }
     
-    public ExecutionEngine(String cmd)
+    public ExecutionEngine(List<String> cmd)
     {
+        /*
         this.cmd = cmd;
         StringBuilder commandBuilder = new StringBuilder();
         commandBuilder.append(this.cmd);
 
         command = commandBuilder.toString();
-        //this.workingDir = workingDir;
-        
-        builder = new ProcessBuilder(command);
+        */
+        builder = new ProcessBuilder(cmd);
         environment = builder.environment();
-        builder.directory(new File(this.workingDir));
+        builder.directory(new File("/storage")); // TODO: read this from ini
     }
 
     public int getReturnValue() throws ProcessNotDoneException
@@ -329,7 +345,6 @@ public class ExecutionEngine implements Runnable
         try
         {
             Thread.currentThread().setName("Executor " + instanceCount);
-            Long startTime = System.currentTimeMillis();
             process = builder.start();
             
             outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -340,7 +355,6 @@ public class ExecutionEngine implements Runnable
             reader = new Thread(readerObject);
             reader.start();
             process.waitFor();
-            runtime = System.currentTimeMillis() - startTime;
             _process_complete = true;
             returnValue = process.exitValue();
             readerObject.shutdown();
