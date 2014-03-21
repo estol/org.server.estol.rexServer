@@ -27,8 +27,11 @@ import java.util.HashMap;
  * They are serializable, have a 0-argument constructor,
  * and allow access to properties using getter and setter methods. 
  * 
+ * This class is deprecated in favor to a database based storage.
+ * 
  * @author Péter Szabó
  */
+@Deprecated
 public class AuthBean implements Serializable
 {
     private final HashMap<String, String> users = new HashMap<>();

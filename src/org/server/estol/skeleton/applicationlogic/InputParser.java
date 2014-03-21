@@ -22,10 +22,13 @@ import org.server.estol.skeleton.applicationlogic.Execution.DirectoryTraverse;
 import org.server.estol.skeleton.applicationlogic.Execution.ExecutionEngine;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import org.clientserver.estol.commobject.CommunicationInterface;
 import org.clientserver.estol.commobject.CommunicationObject;
@@ -46,10 +49,11 @@ public enum  InputParser
     private static int jobNumber = 0;
     private static final HashMap<Integer, ExecutionEngine> jobs = new HashMap();
     private static final HashMap<Integer, String> userJobs = new HashMap();
+    private static final Authentication auth = new Authentication();
     private MainLogic ml = MainLogic.MainLogic;
     
     
-    private class jobWatcher implements Runnable
+    private class Watchdog implements Runnable
     {
         @Override
         public void run()
@@ -127,6 +131,25 @@ public enum  InputParser
                 respond(oos, packPayload(ml.getRoot()));
                 break;
             }
+            case "TestDB":
+            {
+                DatabaseConnector.DB.init();
+                try
+                {
+                    System.out.printf("%d%n", DatabaseConnector.DB.queryDDL("INSERT INTO `users` (`username`, `password`, `admin`) VALUES (\"root\", \"root\", 1)"));
+                    ResultSet result = DatabaseConnector.DB.query("SELECT `username`, `password`, `admin` FROM `users`");
+                    while(result.next())
+                    {
+                        System.out.printf("%s %s %d%n", result.getString("username"), result.getString("password"), result.getInt("admin"));
+                    }
+                }
+                catch (SQLException ex)
+                {
+                    System.out.printf("Exception in query: %s%n", ex.getMessage());
+                }
+                respond(oos, packPayload("Check server stdout!"));
+                break;
+            }
             case "auth":
             {
                 respond(oos, packPayload("hash"));
@@ -143,10 +166,6 @@ public enum  InputParser
                     }
                     respond(oos, packPayload(new DirectoryTraverse().getNodes(slices[1])));
                 }
-                else if (payload.startsWith("logout"))
-                {
-                    new Authentication().logout(payload.split(":")[1]);
-                }
                 else if ((!jobs.isEmpty() && null != payload && !payload.contentEquals("\u0000")) && jobs.containsKey(Integer.parseInt(payload.split(":")[1])))
                 {
                     String[] slices = payload.split(":");
@@ -161,11 +180,14 @@ public enum  InputParser
                     ExecutionEngine ee = jobs.get(Integer.parseInt(slices[1]));
                     respond(oos, packPayload(ee.getOutput()));
                 }
+                else if (payload.startsWith("logout"))
+                {
+                    auth.logout(payload.split(":")[1]);
+                }
                 else if (payload.startsWith("authAs"))
                 {
                     String[] userNpass = payload.split(":")[1].split("-");
-                    Authentication auth = new Authentication();
-                    if (auth.authenticateUser(userNpass[0], userNpass[1]) == AuthStates.OKAY)
+                    if (auth.authenticateUser(userNpass[0], userNpass[1]) == AuthStates.AUTHENTICATED)
                     {
                         if (auth.checkAdmin(userNpass[0]) == AuthStates.OKAY)
                         {
@@ -181,7 +203,66 @@ public enum  InputParser
                         respond(oos, packPayload("Auth failed"));
                     }
                 }
-                else if (payload.startsWith("run")) // run:[username]|script|parameter|parameter|parameter
+                else if (payload.startsWith("admin")) // admin:[username]::action::user::{passw}::{flag}
+                {
+                    String[] slices = payload.split(":", 2)[1].split("::");
+                    if (auth.checkAdmin(slices[0]) == AuthStates.OKAY)
+                    {
+                        String response;
+                        switch (slices[1])
+                        {
+                            case "addUser":
+                            {
+                                response = (auth.addUser(slices[2], slices[3], Boolean.parseBoolean(slices[4])) == AuthStates.OKAY) ? "User added!" : "Error occured!";
+                                break;
+                            }
+                            case "removeUser":
+                            {
+                                response = (auth.removeUser(slices[2], slices[3]) == AuthStates.OKAY) ? "User removed!" : "Error occured!";
+                                break;
+                            }
+                            case "check":
+                            {
+                                List<String> users = auth.getAllUsers();
+                                if (users.contains(slices[2]))
+                                {
+                                    response = "User exists!";
+                                }
+                                else
+                                {
+                                    response = "User doesn't exist!";
+                                }
+                                break;
+                            }
+                            case "changePass":
+                            {
+                                response = (auth.changeUserPassword(slices[2], slices[3], slices[4]) == AuthStates.OKAY) ? "Password changed!" : "Error occured!";
+                                break;
+                            }
+                            case "grantAdmin":
+                            {
+                                response = (auth.grantAdmin(slices[2]) == AuthStates.OKAY) ? "Administrator rights granted!" : "Error occured!";
+                                break;
+                            }
+                            case "revokeAdmin":
+                            {
+                                response = (auth.revokeAdmin(slices[2]) == AuthStates.OKAY) ? "Administrator rights revoked!" : "Error occured!";
+                                break;
+                            }
+                            default:
+                            {
+                                response = "Bad action!";
+                                break;
+                            }
+                        }
+                        respond(oos, packPayload(response));
+                    }
+                    else
+                    {
+                        respond(oos, packPayload("You are not an administrator!"));
+                    }
+                }
+                else if (payload.startsWith("run")) // run:[username]::script::parameter::parameter::parameter
                 {
                     String[] slices = payload.split(":", 2)[1].split("::");
                     if ("wget".equals(slices[1])) // TODO: check the list of available scripts.
@@ -201,18 +282,6 @@ public enum  InputParser
                     else
                     {
                         respond(oos, packPayload("Not yet implemented!"));
-                    }
-                }
-                else if (payload.startsWith("admin")) // admin:[username]-action-user-{passw}-{flag}
-                {
-                    String[] slices = payload.split(":")[1].split("-");
-                    if (new Authentication().checkAdmin(slices[0]) == AuthStates.OKAY)
-                    {
-                        respond(oos, packPayload("Not yet implemented!"));
-                    }
-                    else
-                    {
-                        respond(oos, packPayload("You are not an administrator!"));
                     }
                 }
                 else
